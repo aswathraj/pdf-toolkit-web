@@ -140,6 +140,59 @@ h1 {
   margin-top: 1.5rem;
 }
 
+.result-shell {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.result-card {
+  width: min(760px, 100%);
+  padding: 2.4rem;
+  background: rgba(255, 250, 241, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: center;
+  margin: 1.4rem 0;
+}
+
+.ghost-button {
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--teal);
+  box-shadow: none;
+}
+
+.inline-link {
+  color: var(--accent-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.inline-link:hover {
+  text-decoration: underline;
+}
+
+.result-meta {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(22, 17, 15, 0.08);
+}
+
+.result-meta p {
+  margin: 0.2rem 0;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
 .tool-card {
   padding: 1.5rem;
 }

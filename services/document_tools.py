@@ -563,6 +563,12 @@ def ensure_tesseract() -> None:
             str(runtime_root / "tesseract.exe"),
         ]
     )
+    candidates.extend(
+        [
+            "/opt/homebrew/bin/tesseract",
+            "/usr/local/bin/tesseract",
+        ]
+    )
 
     for candidate in candidates:
         if candidate and Path(candidate).exists():

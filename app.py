@@ -7,7 +7,7 @@ import uuid
 import zipfile
 from pathlib import Path
 
-from flask import Flask, flash, redirect, render_template, request, send_file, url_for
+from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from werkzeug.utils import secure_filename
 
 from services.document_tools import ProcessingError, TOOL_DEFINITIONS, run_tool
@@ -25,6 +25,8 @@ def get_resource_dir() -> Path:
 
 def get_data_dir() -> Path:
     if is_frozen():
+        if sys.platform == "darwin":
+            return Path.home() / "Library" / "Application Support" / "PDF Forge"
         local_appdata = os.environ.get("LOCALAPPDATA")
         if local_appdata:
             return Path(local_appdata) / "PDF Forge"
@@ -47,6 +49,10 @@ app = Flask(
 )
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "pdf-toolkit-dev-secret")
 app.config["MAX_CONTENT_LENGTH"] = None
+
+
+def is_desktop_mode() -> bool:
+    return os.environ.get("PDF_FORGE_DESKTOP") == "1"
 
 
 def cleanup_old_jobs(root: Path, ttl_seconds: int = 60 * 60 * 12) -> None:
@@ -94,6 +100,14 @@ def package_outputs(job_output_dir: Path, result_files: list[Path], tool_key: st
     return archive_path
 
 
+def resolve_job_artifact(job_id: str, filename: str) -> Path:
+    job_output_dir = (OUTPUT_DIR / job_id).resolve()
+    artifact = (job_output_dir / filename).resolve()
+    if not artifact.exists() or artifact.parent != job_output_dir:
+        raise FileNotFoundError
+    return artifact
+
+
 @app.before_request
 def prune_storage() -> None:
     cleanup_old_jobs(UPLOAD_DIR)
@@ -103,6 +117,11 @@ def prune_storage() -> None:
 @app.get("/")
 def index():
     return render_template("index.html", tools=TOOL_DEFINITIONS)
+
+
+@app.context_processor
+def inject_app_mode():
+    return {"desktop_mode": is_desktop_mode()}
 
 
 @app.post("/process/<tool_key>")
@@ -134,6 +153,14 @@ def process(tool_key: str):
             form_data=request.form,
         )
         artifact = package_outputs(job_output_dir, result.files, tool_key)
+        if is_desktop_mode():
+            return render_template(
+                "result.html",
+                artifact_name=artifact.name,
+                artifact_path=str(artifact),
+                artifact_dir=str(artifact.parent),
+                download_url=url_for("download_artifact", job_id=job_id, filename=artifact.name),
+            )
         return send_file(
             artifact,
             as_attachment=True,
@@ -151,6 +178,21 @@ def process(tool_key: str):
 @app.get("/health")
 def health():
     return {"status": "ok", "tools": len(TOOL_DEFINITIONS), "data_dir": str(DATA_DIR)}
+
+
+@app.get("/download/<job_id>/<filename>")
+def download_artifact(job_id: str, filename: str):
+    try:
+        artifact = resolve_job_artifact(job_id, filename)
+    except FileNotFoundError:
+        abort(404)
+
+    return send_file(
+        artifact,
+        as_attachment=True,
+        download_name=artifact.name,
+        mimetype="application/octet-stream",
+    )
 
 
 def run_development_server() -> None:

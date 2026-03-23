@@ -5,5 +5,7 @@ uploads/
 outputs/
 build/
 dist/
+release/
 tesseract/
 installer_output/
+desktop-test/

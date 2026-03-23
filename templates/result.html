@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PDF Forge Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="page-shell result-shell">
+    <section class="result-card">
+      <p class="eyebrow">Processing Complete</p>
+      <h1>Your file is ready</h1>
+      <p class="hero-text">
+        PDF Forge saved the result locally inside the app data folder. Open it directly or reveal it in Finder.
+      </p>
+
+      <div class="result-actions">
+        <button type="button" onclick="openArtifact()">Open File</button>
+        <button type="button" class="ghost-button" onclick="revealArtifact()">Show In Finder</button>
+        <a class="inline-link" href="{{ url_for('index') }}">Process another file</a>
+      </div>
+
+      <div class="result-meta">
+        <p><strong>File:</strong> {{ artifact_name }}</p>
+        <p><strong>Saved to:</strong> {{ artifact_dir }}</p>
+      </div>
+
+      <p class="footnote">
+        If your app window cannot open the file directly, use the fallback link:
+        <a class="inline-link" href="{{ download_url }}">download/export result</a>
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const artifactPath = {{ artifact_path|tojson }};
+    const downloadUrl = {{ download_url|tojson }};
+
+    async function callDesktop(methodName) {
+      const desktopApi = window.pywebview && window.pywebview.api;
+      if (desktopApi && typeof desktopApi[methodName] === 'function') {
+        await desktopApi[methodName](artifactPath);
+        return;
+      }
+      window.location.href = downloadUrl;
+    }
+
+    function openArtifact() {
+      callDesktop('open_path');
+    }
+
+    function revealArtifact() {
+      callDesktop('reveal_path');
+    }
+  </script>
+</body>
+</html>

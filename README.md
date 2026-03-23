@@ -43,6 +43,30 @@ If port 5000 is already in use:
 HOST=127.0.0.1 PORT=5050 FLASK_DEBUG=0 python3 app.py
 ```
 
+## macOS DMG Build
+
+This Mac can build a local `.app` bundle and `.dmg` for the current project.
+
+```bash
+cd "/Users/aswathraj/Documents/codex 1/pdf_toolkit_web"
+chmod +x build_mac_dmg.sh
+./build_mac_dmg.sh
+```
+
+That produces:
+
+```text
+dist/PDF Forge.app
+release/PDFForge-macOS.dmg
+```
+
+Notes for the macOS build:
+
+- the packaged app stores uploads and outputs in `~/Library/Application Support/PDF Forge`
+- OCR uses the installed Homebrew Tesseract on this Mac, for example `/opt/homebrew/bin/tesseract`
+- the macOS build opens inside its own application window instead of launching your browser
+- because the app is locally packaged and ad-hoc signed, macOS may still ask you to confirm opening it the first time
+
 ## Windows EXE Build
 
 You cannot produce a real Windows `.exe` from this macOS environment directly with PyInstaller. The project now includes the Windows build files so you can generate it on a Windows machine.
