@@ -4,18 +4,18 @@ setlocal
 cd /d "%~dp0"
 
 if not exist ".venv" (
-  py -3 -m venv .venv
+  python -m venv .venv
 )
 
-call ".venv\Scripts\activate.bat"
+set "VENV_PY=.venv\Scripts\python.exe"
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt -r requirements-windows-build.txt
+"%VENV_PY%" -m pip install --upgrade pip
+"%VENV_PY%" -m pip install -r requirements.txt -r requirements-windows-build.txt
 
 powershell -ExecutionPolicy Bypass -File "scripts\prepare_tesseract.ps1" -InstallIfMissing
 if errorlevel 1 exit /b 1
 
-python -m PyInstaller --noconfirm pdf_forge.spec
+"%VENV_PY%" -m PyInstaller --noconfirm pdf_forge.spec
 if errorlevel 1 exit /b 1
 
 set "ISCC_PATH="
