@@ -4,6 +4,7 @@ Download the packaged desktop app here:
 
 - [`PDFForge-macOS.dmg`](PDFForge-macOS.dmg)
 - [`PDFForge-macOS.dmg.sha256`](PDFForge-macOS.dmg.sha256)
+- [Release download](https://github.com/aswathraj/pdf-toolkit-web/releases/download/v1.0.0/PDFForge-macOS.dmg)
 
 After opening the DMG:
 

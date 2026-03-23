@@ -71,8 +71,9 @@ Notes for the macOS build:
 
 Ready-to-download installers are organized in the [`installers/`](installers) folder.
 
-- macOS: tracked in the repo as `installers/mac/PDFForge-macOS.dmg`
-- Windows: listed in `installers/windows/README.md` and available from the successful GitHub Actions installer build artifact
+- GitHub release: `https://github.com/aswathraj/pdf-toolkit-web/releases/tag/v1.0.0`
+- macOS: tracked in the repo as `installers/mac/PDFForge-macOS.dmg` and also published in the release
+- Windows: listed in `installers/windows/README.md` and published in the release as `PDFForgeSetup.exe`
 
 ## Windows EXE Build
 

@@ -1,15 +1,17 @@
 # Windows Installer
 
-The Windows installer was built successfully on GitHub Actions and is available from this workflow run:
+Download the published Windows files from the GitHub release:
 
-- [Build Windows Installer run 23455837808](https://github.com/aswathraj/pdf-toolkit-web/actions/runs/23455837808)
+- [PDFForgeSetup.exe](https://github.com/aswathraj/pdf-toolkit-web/releases/download/v1.0.0/PDFForgeSetup.exe)
+- [PDFForge.exe](https://github.com/aswathraj/pdf-toolkit-web/releases/download/v1.0.0/PDFForge.exe)
+- [Release page](https://github.com/aswathraj/pdf-toolkit-web/releases/tag/v1.0.0)
 
-On that page, download the artifact named `PDFForge-Windows`. After extracting it, run:
+Use:
 
-- `PDFForgeSetup.exe` to install the app
-- `PDFForge.exe` if you want the portable executable instead of the installer
+- `PDFForgeSetup.exe` to install the app on Windows
+- `PDFForge.exe` if you want the portable app without installation
 
 Why the installer is not committed directly into this Git folder:
 
-- the Windows build artifact is much larger than GitHub's normal repo file-size limit
-- storing it as an Actions artifact avoids broken pushes and keeps the repo usable
+- the Windows installer exceeds GitHub's normal repo file-size limit
+- publishing it in Releases keeps the repo clean while still giving you a direct download
