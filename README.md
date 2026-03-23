@@ -67,6 +67,13 @@ Notes for the macOS build:
 - the macOS build opens inside its own application window instead of launching your browser
 - because the app is locally packaged and ad-hoc signed, macOS may still ask you to confirm opening it the first time
 
+## Installer Downloads
+
+Ready-to-download installers are organized in the [`installers/`](installers) folder.
+
+- macOS: tracked in the repo as `installers/mac/PDFForge-macOS.dmg`
+- Windows: listed in `installers/windows/README.md` and available from the successful GitHub Actions installer build artifact
+
 ## Windows EXE Build
 
 You cannot produce a real Windows `.exe` from this macOS environment directly with PyInstaller. The project now includes the Windows build files so you can generate it on a Windows machine.
