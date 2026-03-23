@@ -2,7 +2,7 @@ services:
   - type: web
     name: pdf-forge-web
     runtime: docker
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeployTrigger: commit
