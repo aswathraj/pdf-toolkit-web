@@ -14,6 +14,8 @@ Local Flask app for PDF and document processing, inspired by iLovePDF-style work
 - Split PDF by page or custom ranges
 - Remove annotations and optional watermark text
 - OCR scanned PDFs and images into searchable PDFs
+- Dedicated About page and browser-ready result flow
+- Public-web deployment support with Docker and Gunicorn
 
 ## Notes
 
@@ -42,6 +44,50 @@ If port 5000 is already in use:
 ```bash
 HOST=127.0.0.1 PORT=5050 FLASK_DEBUG=0 python3 app.py
 ```
+
+## Public Web Deployment
+
+The project now includes a production-ready web path so you can host it for public users while keeping OCR support.
+
+GitHub Pages is not enough for the full app because this project depends on a Python/Flask backend and OCR processing. Use a real web-app host for the public site.
+
+### Recommended: Render
+
+This repo now includes a [`render.yaml`](render.yaml) blueprint for a Docker-based web service and a GitHub Actions workflow that can trigger redeploys through a Render deploy hook.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aswathraj/pdf-toolkit-web)
+
+Deploy flow:
+
+1. Push this repo to GitHub
+2. In Render, create a new Web Service from this repository
+   If the repository is private, install Render's GitHub App or connect the private repo in Render first.
+3. Let Render build from the included `Dockerfile`
+4. Set or keep the generated `FLASK_SECRET_KEY`
+5. After the first deploy, copy your Render Deploy Hook URL into the GitHub secret `RENDER_DEPLOY_HOOK_URL`
+
+After that, pushes to `main` can trigger redeploys automatically from GitHub Actions.
+
+### Docker
+
+```bash
+cd "/Users/aswathraj/Documents/codex 1/pdf_toolkit_web"
+docker build -t pdf-forge-web .
+docker run --rm -p 5000:5000 \
+  -e FLASK_SECRET_KEY="change-this-secret" \
+  -e PORT=5000 \
+  pdf-forge-web
+```
+
+Then open [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+### Production Notes
+
+- the Docker image installs Tesseract so OCR keeps working in the hosted web app
+- Gunicorn is included for production serving
+- old uploaded jobs are cleaned automatically after about 12 hours
+- there is still no artificial app-side upload cap, but real limits depend on the host and reverse proxy
+- Render can build this app directly from the included `Dockerfile` and `render.yaml`
 
 ## macOS DMG Build
 

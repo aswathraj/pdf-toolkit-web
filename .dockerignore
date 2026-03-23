@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+__pycache__
+.DS_Store
+build
+dist
+release
+desktop-test
+github_artifacts
+installers
+outputs
+uploads
+*.pyc
+*.pyo
+*.pyd

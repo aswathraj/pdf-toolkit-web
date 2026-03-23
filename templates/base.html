@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PDF Forge{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="site-header">
+    <div class="page-shell shell-tight">
+      <div class="header-panel">
+        <a class="brand-mark" href="{{ url_for('index') }}">PDF Forge</a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a class="nav-link {% if active_page == 'home' %}is-active{% endif %}" href="{{ url_for('index') }}">Home</a>
+          <a class="nav-link {% if active_page == 'about' %}is-active{% endif %}" href="{{ url_for('about') }}">About</a>
+        </nav>
+
+        <a class="header-cta" href="{{ url_for('index') }}#tool-suite">Open Tools</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <section class="flash-stack">
+          {% for category, message in messages %}
+            <article class="flash {{ category }}">{{ message }}</article>
+          {% endfor %}
+        </section>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-shell shell-tight footer-grid">
+      <div>
+        <p class="footer-mark">PDF Forge</p>
+        <p class="footer-copy">
+          Browser-ready document conversion, PDF repair, and OCR. Made by Aswath Raj.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <a href="{{ url_for('index') }}">Tool Suite</a>
+        <a href="{{ url_for('about') }}">About</a>
+        <a href="{{ url_for('health') }}">Health</a>
+      </div>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

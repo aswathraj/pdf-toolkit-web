@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}About PDF Forge{% endblock %}
+
+{% block content %}
+  <section class="content-hero content-hero-wide">
+    <div class="hero-copy">
+      <p class="eyebrow">About The Project</p>
+      <h1>PDF Forge was built to make document work simpler on the web and on desktop.</h1>
+      <p class="hero-text">
+        PDF Forge brings together conversion, PDF cleanup, merge and split workflows, and OCR in one
+        place. It is designed to work as a public browser-based web app while still packaging cleanly
+        as a desktop application.
+      </p>
+      <div class="hero-pills">
+        <span>{{ tool_count }} built-in tools</span>
+        <span>Browser-ready deployment</span>
+        <span>OCR-enabled workflows</span>
+      </div>
+    </div>
+
+    <aside class="hero-note">
+      <h2>Made by Aswath Raj</h2>
+      <p class="tool-summary">
+        The app is built with Python, Flask, HTML, CSS, and a document-processing stack that covers
+        images, PDFs, Word files, Excel files, and OCR for scanned documents.
+      </p>
+      <p class="footnote">
+        When deployed publicly, files are processed on the server and old jobs are cleaned up
+        automatically after about {{ job_retention_hours }} hours.
+      </p>
+    </aside>
+  </section>
+
+  <section class="section-panel">
+    <div class="section-heading">
+      <p class="eyebrow">Capabilities</p>
+      <h2>What this app covers</h2>
+    </div>
+
+    <div class="feature-grid">
+      <article class="feature-card">
+        <h3>Document conversion</h3>
+        <p>Convert JPG, PNG, and WEBP to PDF, plus Word and Excel workflows in both directions.</p>
+      </article>
+      <article class="feature-card">
+        <h3>PDF operations</h3>
+        <p>Merge multiple PDFs, split by page or range, and clean watermarks or annotations.</p>
+      </article>
+      <article class="feature-card">
+        <h3>OCR processing</h3>
+        <p>Run Tesseract-powered OCR on scanned PDFs and images to generate searchable PDFs.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section-panel">
+    <div class="section-heading">
+      <p class="eyebrow">Built For Hosting</p>
+      <h2>Public-web ready</h2>
+    </div>
+
+    <div class="about-grid">
+      <article class="about-card">
+        <h3>Deployment-friendly stack</h3>
+        <p>
+          The project now includes a production web server path and Docker support so the full app can
+          be deployed for public use with OCR preserved.
+        </p>
+      </article>
+      <article class="about-card">
+        <h3>Feature badges</h3>
+        <p>{{ tool_badges|join(", ") }}</p>
+      </article>
+      <article class="about-card">
+        <h3>What to expect</h3>
+        <p>
+          There is no artificial app-side upload cap, but real-world limits still depend on the host,
+          disk space, RAM, and any reverse proxy in front of the app.
+        </p>
+      </article>
+    </div>
+  </section>
+{% endblock %}

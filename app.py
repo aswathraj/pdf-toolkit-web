@@ -9,6 +9,7 @@ from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from services.document_tools import ProcessingError, TOOL_DEFINITIONS, run_tool
 
@@ -38,6 +39,8 @@ RESOURCE_DIR = get_resource_dir()
 DATA_DIR = get_data_dir()
 UPLOAD_DIR = DATA_DIR / "uploads"
 OUTPUT_DIR = DATA_DIR / "outputs"
+JOB_TTL_SECONDS = 60 * 60 * 12
+JOB_TTL_HOURS = JOB_TTL_SECONDS // 3600
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,6 +50,7 @@ app = Flask(
     template_folder=str(RESOURCE_DIR / "templates"),
     static_folder=str(RESOURCE_DIR / "static"),
 )
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1)
 app.config["SECRET_KEY"] = os.environ.get("FLASK_SECRET_KEY", "pdf-toolkit-dev-secret")
 app.config["MAX_CONTENT_LENGTH"] = None
 
@@ -108,25 +112,72 @@ def resolve_job_artifact(job_id: str, filename: str) -> Path:
     return artifact
 
 
+def humanize_bytes(size: int) -> str:
+    units = ["B", "KB", "MB", "GB", "TB"]
+    value = float(size)
+    for unit in units:
+        if value < 1024 or unit == units[-1]:
+            if unit == "B":
+                return f"{int(value)} {unit}"
+            return f"{value:.1f} {unit}"
+        value /= 1024
+    return f"{size} B"
+
+
+def get_tool_definition(tool_key: str):
+    return next((tool for tool in TOOL_DEFINITIONS if tool["key"] == tool_key), None)
+
+
+def render_result_page(*, job_id: str, artifact: Path, tool: dict, result_message: str) -> str:
+    download_url = url_for("download_artifact", job_id=job_id, filename=artifact.name)
+    return render_template(
+        "result.html",
+        active_page="home",
+        tool=tool,
+        artifact_name=artifact.name,
+        artifact_path=str(artifact),
+        artifact_dir=str(artifact.parent),
+        artifact_size=humanize_bytes(artifact.stat().st_size),
+        artifact_is_archive=artifact.suffix.lower() == ".zip",
+        result_message=result_message or f"PDF Forge finished {tool['title'].lower()} and prepared your download.",
+        download_url=download_url,
+        retention_hours=JOB_TTL_HOURS,
+    )
+
+
 @app.before_request
 def prune_storage() -> None:
-    cleanup_old_jobs(UPLOAD_DIR)
-    cleanup_old_jobs(OUTPUT_DIR)
+    cleanup_old_jobs(UPLOAD_DIR, ttl_seconds=JOB_TTL_SECONDS)
+    cleanup_old_jobs(OUTPUT_DIR, ttl_seconds=JOB_TTL_SECONDS)
 
 
 @app.get("/")
 def index():
-    return render_template("index.html", tools=TOOL_DEFINITIONS)
+    return render_template("index.html", tools=TOOL_DEFINITIONS, active_page="home")
+
+
+@app.get("/about")
+def about():
+    badges = sorted({tool["badge"] for tool in TOOL_DEFINITIONS})
+    return render_template(
+        "about.html",
+        active_page="about",
+        tool_count=len(TOOL_DEFINITIONS),
+        tool_badges=badges,
+    )
 
 
 @app.context_processor
 def inject_app_mode():
-    return {"desktop_mode": is_desktop_mode()}
+    return {
+        "desktop_mode": is_desktop_mode(),
+        "job_retention_hours": JOB_TTL_HOURS,
+    }
 
 
 @app.post("/process/<tool_key>")
 def process(tool_key: str):
-    tool = next((tool for tool in TOOL_DEFINITIONS if tool["key"] == tool_key), None)
+    tool = get_tool_definition(tool_key)
     if tool is None:
         flash("That tool is not available.", "error")
         return redirect(url_for("index"))
@@ -153,19 +204,11 @@ def process(tool_key: str):
             form_data=request.form,
         )
         artifact = package_outputs(job_output_dir, result.files, tool_key)
-        if is_desktop_mode():
-            return render_template(
-                "result.html",
-                artifact_name=artifact.name,
-                artifact_path=str(artifact),
-                artifact_dir=str(artifact.parent),
-                download_url=url_for("download_artifact", job_id=job_id, filename=artifact.name),
-            )
-        return send_file(
-            artifact,
-            as_attachment=True,
-            download_name=artifact.name,
-            mimetype="application/octet-stream",
+        return render_result_page(
+            job_id=job_id,
+            artifact=artifact,
+            tool=tool,
+            result_message=result.message,
         )
     except ProcessingError as exc:
         flash(str(exc), "error")
@@ -177,7 +220,7 @@ def process(tool_key: str):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "tools": len(TOOL_DEFINITIONS), "data_dir": str(DATA_DIR)}
+    return {"status": "ok", "tools": len(TOOL_DEFINITIONS), "mode": "desktop" if is_desktop_mode() else "web"}
 
 
 @app.get("/download/<job_id>/<filename>")

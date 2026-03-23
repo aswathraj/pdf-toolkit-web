@@ -1,93 +1,105 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF Forge</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-  <main class="page-shell">
-    <section class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Python + HTML Document Suite</p>
-        <h1>PDF Forge</h1>
-        <p class="hero-text">
-          Convert, merge, split, clean, and OCR files in one place. The app stores uploads on disk,
-          removes the Flask upload cap, and processes documents locally.
-        </p>
-        <div class="hero-pills">
-          <span>No app-side file limit</span>
-          <span>Runs locally</span>
-          <span>Searchable OCR PDF</span>
-        </div>
+{% extends "base.html" %}
+
+{% block title %}PDF Forge{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Public Web App + Desktop App</p>
+      <h1>Document tools people can use directly from the browser.</h1>
+      <p class="hero-text">
+        Convert, merge, split, clean, and OCR files in one place. PDF Forge now works as a cleaner
+        browser-based web app with a dedicated result flow, while still supporting the packaged desktop app.
+      </p>
+      <div class="hero-actions">
+        <a class="button-link" href="#tool-suite">Start with a tool</a>
+        <a class="ghost-link" href="{{ url_for('about') }}">About PDF Forge</a>
       </div>
-      <aside class="hero-note">
-        <h2>What’s included</h2>
-        <ul>
-          <li>JPG, Word, Excel, and PDF conversion flows</li>
-          <li>Merge and split PDF tools</li>
-          <li>Watermark cleanup with optional text matching</li>
-          <li>OCR via Tesseract for scans and images</li>
-        </ul>
-        <p class="footnote">
-          “No limit” here means there is no artificial Flask upload cap in the app itself. Actual throughput still depends on machine storage, memory, and any reverse proxy you place in front of it.
-        </p>
-      </aside>
-    </section>
+      <div class="hero-pills">
+        <span>No app-side file limit</span>
+        <span>Browser-ready deployment</span>
+        <span>Searchable OCR PDFs</span>
+      </div>
+    </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <section class="flash-stack">
-          {% for category, message in messages %}
-            <article class="flash {{ category }}">{{ message }}</article>
-          {% endfor %}
-        </section>
-      {% endif %}
-    {% endwith %}
+    <aside class="hero-note">
+      <h2>What public users can do</h2>
+      <ul>
+        <li>Convert JPG, Word, Excel, and PDF files</li>
+        <li>Merge and split PDFs in the browser</li>
+        <li>Remove watermark text and clean annotations</li>
+        <li>Run OCR with Tesseract-backed processing</li>
+      </ul>
+      <p class="footnote">
+        “No limit” here means the app itself does not impose a Flask upload cap. Actual capacity still
+        depends on the hosting environment, available storage, RAM, and any reverse proxy settings.
+      </p>
+    </aside>
+  </section>
 
-    <section class="tool-grid">
-      {% for tool in tools %}
-        <article class="tool-card">
-          <div class="tool-head">
-            <span class="tool-badge">{{ tool.badge }}</span>
-            <h2>{{ tool.title }}</h2>
-          </div>
-          <p class="tool-summary">{{ tool.summary }}</p>
-          <form method="post" action="{{ url_for('process', tool_key=tool.key) }}" enctype="multipart/form-data" class="tool-form">
-            <label class="drop-field">
-              <span>Select {{ 'files' if tool.multiple else 'a file' }}</span>
-              <input type="file" name="files" accept="{{ tool.accept }}" {% if tool.multiple %}multiple{% endif %} required>
-            </label>
+  <section class="feature-grid quick-facts">
+    <article class="feature-card">
+      <h3>10 built-in tools</h3>
+      <p>Image, Office, PDF, repair, and OCR flows are all available from the same interface.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Temporary file retention</h3>
+      <p>Processed jobs are kept just long enough for downloads, then cleaned up automatically.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Public hosting ready</h3>
+      <p>The app now includes production-ready web serving and Docker deployment support.</p>
+    </article>
+  </section>
 
-            {% if tool.key == 'split-pdf' %}
-              <div class="field-group">
-                <label>
-                  <span>Split mode</span>
-                  <select name="split_mode">
-                    <option value="all">Every page separately</option>
-                    <option value="ranges">Custom ranges</option>
-                  </select>
-                </label>
-                <label>
-                  <span>Ranges</span>
-                  <input type="text" name="ranges" placeholder="1-3,5,8-10">
-                </label>
-              </div>
-            {% endif %}
+  <section class="section-heading" id="tool-suite">
+    <p class="eyebrow">Tool Suite</p>
+    <h2>Choose a workflow</h2>
+    <p class="section-copy">
+      Upload your files, run the selected process, and download the result from the browser when it is ready.
+    </p>
+  </section>
 
-            {% if tool.key == 'remove-watermark' %}
+  <section class="tool-grid">
+    {% for tool in tools %}
+      <article class="tool-card">
+        <div class="tool-head">
+          <span class="tool-badge">{{ tool.badge }}</span>
+          <h2>{{ tool.title }}</h2>
+        </div>
+        <p class="tool-summary">{{ tool.summary }}</p>
+        <form method="post" action="{{ url_for('process', tool_key=tool.key) }}" enctype="multipart/form-data" class="tool-form">
+          <label class="drop-field">
+            <span>Select {{ 'files' if tool.multiple else 'a file' }}</span>
+            <input type="file" name="files" accept="{{ tool.accept }}" {% if tool.multiple %}multiple{% endif %} required>
+          </label>
+
+          {% if tool.key == 'split-pdf' %}
+            <div class="field-group">
               <label>
-                <span>Watermark text to remove (optional)</span>
-                <input type="text" name="watermark_text" placeholder="CONFIDENTIAL">
+                <span>Split mode</span>
+                <select name="split_mode">
+                  <option value="all">Every page separately</option>
+                  <option value="ranges">Custom ranges</option>
+                </select>
               </label>
-            {% endif %}
+              <label>
+                <span>Ranges</span>
+                <input type="text" name="ranges" placeholder="1-3,5,8-10">
+              </label>
+            </div>
+          {% endif %}
 
-            <button type="submit">{{ tool.button }}</button>
-          </form>
-        </article>
-      {% endfor %}
-    </section>
-  </main>
-</body>
-</html>
+          {% if tool.key == 'remove-watermark' %}
+            <label>
+              <span>Watermark text to remove (optional)</span>
+              <input type="text" name="watermark_text" placeholder="CONFIDENTIAL">
+            </label>
+          {% endif %}
+
+          <button type="submit">{{ tool.button }}</button>
+        </form>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

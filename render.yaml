@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: pdf-forge-web
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: commit
+    healthCheckPath: /health
+    envVars:
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: "2"
