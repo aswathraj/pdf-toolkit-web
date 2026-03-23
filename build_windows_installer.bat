@@ -15,7 +15,7 @@ python -m pip install -r requirements.txt -r requirements-windows-build.txt
 powershell -ExecutionPolicy Bypass -File "scripts\prepare_tesseract.ps1" -InstallIfMissing
 if errorlevel 1 exit /b 1
 
-pyinstaller --noconfirm pdf_forge.spec
+python -m PyInstaller --noconfirm pdf_forge.spec
 if errorlevel 1 exit /b 1
 
 set "ISCC_PATH="
