@@ -412,6 +412,95 @@ input[type="file"] {
   word-break: break-word;
 }
 
+.job-card {
+  width: min(860px, 100%);
+}
+
+.job-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1.4rem;
+}
+
+.job-stat,
+.job-error-panel {
+  padding: 1rem 1.1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(24, 19, 17, 0.08);
+}
+
+.job-stat-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(24, 19, 17, 0.62);
+}
+
+.progress-shell {
+  margin-top: 1.4rem;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(24, 19, 17, 0.08);
+}
+
+.progress-track {
+  width: 100%;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(24, 19, 17, 0.08);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--accent) 100%);
+  transition: width 320ms ease;
+}
+
+.progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 0.85rem;
+}
+
+.job-error-panel {
+  margin-top: 1.4rem;
+  border-color: rgba(143, 45, 20, 0.2);
+  background: rgba(255, 240, 233, 0.92);
+}
+
+.job-error-panel h2 {
+  font-size: 1.2rem;
+}
+
+.job-error-panel p {
+  margin: 0.5rem 0 0;
+  line-height: 1.6;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(24, 19, 17, 0.08);
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
 .site-footer {
   padding: 0 0 2rem;
 }
@@ -462,12 +551,20 @@ input[type="file"] {
   .field-group,
   .quick-facts,
   .feature-grid,
-  .about-grid {
+  .about-grid,
+  .job-status-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-copy {
     padding: 2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .progress-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

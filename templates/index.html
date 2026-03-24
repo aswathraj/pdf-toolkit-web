@@ -26,6 +26,7 @@
       <h2>What public users can do</h2>
       <ul>
         <li>Convert JPG, Word, Excel, and PDF files</li>
+        <li>Resize images by pixels, set DPI, and convert formats</li>
         <li>Merge and split PDFs in the browser</li>
         <li>Remove watermark text and clean annotations</li>
         <li>Run OCR with Tesseract-backed processing</li>
@@ -39,8 +40,8 @@
 
   <section class="feature-grid quick-facts">
     <article class="feature-card">
-      <h3>10 built-in tools</h3>
-      <p>Image, Office, PDF, repair, and OCR flows are all available from the same interface.</p>
+      <h3>{{ tools|length }} built-in tools</h3>
+      <p>Image, Office, PDF, repair, OCR, and image-resize flows all live in the same interface.</p>
     </article>
     <article class="feature-card">
       <h3>Temporary file retention</h3>
@@ -94,6 +95,42 @@
             <label>
               <span>Watermark text to remove (optional)</span>
               <input type="text" name="watermark_text" placeholder="CONFIDENTIAL">
+            </label>
+          {% endif %}
+
+          {% if tool.key == 'resize-image' %}
+            <div class="field-group">
+              <label>
+                <span>Width (px)</span>
+                <input type="number" name="width_px" min="1" placeholder="1920">
+              </label>
+              <label>
+                <span>Height (px)</span>
+                <input type="number" name="height_px" min="1" placeholder="1080">
+              </label>
+            </div>
+
+            <div class="field-group">
+              <label>
+                <span>DPI (optional)</span>
+                <input type="number" name="dpi" min="1" placeholder="300">
+              </label>
+              <label>
+                <span>Output format</span>
+                <select name="output_format">
+                  <option value="original">Keep original format</option>
+                  <option value="jpeg">JPEG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WEBP</option>
+                  <option value="tiff">TIFF</option>
+                  <option value="bmp">BMP</option>
+                </select>
+              </label>
+            </div>
+
+            <label class="checkbox-row">
+              <input type="checkbox" name="keep_aspect" checked>
+              <span>Keep aspect ratio when resizing</span>
             </label>
           {% endif %}
 

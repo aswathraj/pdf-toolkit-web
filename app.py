@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
+import threading
 import time
 import uuid
 import zipfile
 from pathlib import Path
 
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
-from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.utils import secure_filename
 
 from services.document_tools import ProcessingError, TOOL_DEFINITIONS, run_tool
 
@@ -39,8 +41,10 @@ RESOURCE_DIR = get_resource_dir()
 DATA_DIR = get_data_dir()
 UPLOAD_DIR = DATA_DIR / "uploads"
 OUTPUT_DIR = DATA_DIR / "outputs"
+JOB_STATUS_FILENAME = "status.json"
 JOB_TTL_SECONDS = 60 * 60 * 12
 JOB_TTL_HOURS = JOB_TTL_SECONDS // 3600
+JOB_STATUS_LOCK = threading.Lock()
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -104,10 +108,65 @@ def package_outputs(job_output_dir: Path, result_files: list[Path], tool_key: st
     return archive_path
 
 
+def job_output_dir(job_id: str) -> Path:
+    return OUTPUT_DIR / job_id
+
+
+def job_status_path(job_id: str) -> Path:
+    return job_output_dir(job_id) / JOB_STATUS_FILENAME
+
+
+def write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_suffix(path.suffix + ".tmp")
+    temp_path.write_text(json.dumps(payload, ensure_ascii=True, sort_keys=True), encoding="utf-8")
+    temp_path.replace(path)
+
+
+def create_job_record(job_id: str, tool_key: str, filenames: list[str]) -> dict:
+    now = time.time()
+    payload = {
+        "job_id": job_id,
+        "tool_key": tool_key,
+        "input_filenames": filenames,
+        "status": "queued",
+        "progress": 0.0,
+        "detail": "Upload received. Waiting to start.",
+        "error": "",
+        "eta_seconds": None,
+        "artifact_name": "",
+        "artifact_size": 0,
+        "result_message": "",
+        "created_at": now,
+        "started_at": None,
+        "updated_at": now,
+        "completed_at": None,
+    }
+    with JOB_STATUS_LOCK:
+        write_json(job_status_path(job_id), payload)
+    return payload
+
+
+def load_job_record(job_id: str) -> dict:
+    path = job_status_path(job_id)
+    if not path.exists():
+        raise FileNotFoundError
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def update_job_record(job_id: str, **updates) -> dict:
+    with JOB_STATUS_LOCK:
+        payload = load_job_record(job_id)
+        payload.update(updates)
+        payload["updated_at"] = time.time()
+        write_json(job_status_path(job_id), payload)
+    return payload
+
+
 def resolve_job_artifact(job_id: str, filename: str) -> Path:
-    job_output_dir = (OUTPUT_DIR / job_id).resolve()
-    artifact = (job_output_dir / filename).resolve()
-    if not artifact.exists() or artifact.parent != job_output_dir:
+    output_dir = job_output_dir(job_id).resolve()
+    artifact = (output_dir / filename).resolve()
+    if not artifact.exists() or artifact.parent != output_dir:
         raise FileNotFoundError
     return artifact
 
@@ -124,11 +183,39 @@ def humanize_bytes(size: int) -> str:
     return f"{size} B"
 
 
+def humanize_duration(seconds: float | None) -> str:
+    if seconds is None:
+        return "Estimating..."
+    remaining = max(0, int(round(seconds)))
+    if remaining < 60:
+        return f"about {remaining}s"
+    minutes, secs = divmod(remaining, 60)
+    if minutes < 60:
+        return f"about {minutes}m {secs:02d}s"
+    hours, minutes = divmod(minutes, 60)
+    return f"about {hours}h {minutes:02d}m"
+
+
 def get_tool_definition(tool_key: str):
     return next((tool for tool in TOOL_DEFINITIONS if tool["key"] == tool_key), None)
 
 
-def render_result_page(*, job_id: str, artifact: Path, tool: dict, result_message: str) -> str:
+def serialize_job_record(payload: dict) -> dict:
+    progress = max(0.0, min(float(payload.get("progress", 0.0)), 1.0))
+    started_at = payload.get("started_at")
+    elapsed_seconds = max(0.0, time.time() - started_at) if started_at else 0.0
+    artifact_size = int(payload.get("artifact_size") or 0)
+    return {
+        **payload,
+        "progress": progress,
+        "progress_percent": int(round(progress * 100)),
+        "eta_text": humanize_duration(payload.get("eta_seconds")),
+        "elapsed_text": humanize_duration(elapsed_seconds),
+        "artifact_size_text": humanize_bytes(artifact_size) if artifact_size else "",
+    }
+
+
+def render_result_page(job_id: str, tool: dict, payload: dict, artifact: Path) -> str:
     download_url = url_for("download_artifact", job_id=job_id, filename=artifact.name)
     return render_template(
         "result.html",
@@ -139,10 +226,90 @@ def render_result_page(*, job_id: str, artifact: Path, tool: dict, result_messag
         artifact_dir=str(artifact.parent),
         artifact_size=humanize_bytes(artifact.stat().st_size),
         artifact_is_archive=artifact.suffix.lower() == ".zip",
-        result_message=result_message or f"PDF Forge finished {tool['title'].lower()} and prepared your download.",
+        result_message=payload.get("result_message") or f"PDF Forge finished {tool['title'].lower()} and prepared your download.",
         download_url=download_url,
         retention_hours=JOB_TTL_HOURS,
     )
+
+
+def run_job(job_id: str, tool_key: str, saved_files: list[Path], form_data: dict[str, str]) -> None:
+    tool = get_tool_definition(tool_key)
+    if tool is None:
+        update_job_record(job_id, status="failed", error="That tool is not available.", detail="Job could not start.")
+        return
+
+    output_dir = job_output_dir(job_id)
+    started_at = time.time()
+    update_job_record(
+        job_id,
+        status="processing",
+        started_at=started_at,
+        detail="Preparing files",
+        progress=0.01,
+        eta_seconds=None,
+        error="",
+    )
+
+    def progress_callback(progress: float, detail: str) -> None:
+        eta_seconds = None
+        if progress > 0.01 and progress < 1.0:
+            elapsed = max(0.0, time.time() - started_at)
+            eta_seconds = max(0, int(elapsed * (1.0 - progress) / progress))
+        update_job_record(
+            job_id,
+            status="processing",
+            progress=progress,
+            detail=detail,
+            eta_seconds=eta_seconds,
+        )
+
+    try:
+        result = run_tool(
+            tool_key=tool_key,
+            files=saved_files,
+            output_dir=output_dir,
+            form_data=form_data,
+            progress_callback=progress_callback,
+        )
+        progress_callback(0.97, "Packaging your download")
+        artifact = package_outputs(output_dir, result.files, tool_key)
+        update_job_record(
+            job_id,
+            status="completed",
+            progress=1.0,
+            detail="Ready to download",
+            eta_seconds=0,
+            artifact_name=artifact.name,
+            artifact_size=artifact.stat().st_size,
+            result_message=result.message,
+            completed_at=time.time(),
+        )
+    except ProcessingError as exc:
+        update_job_record(
+            job_id,
+            status="failed",
+            detail="Processing failed",
+            error=str(exc),
+            eta_seconds=None,
+        )
+    except Exception as exc:  # pragma: no cover - last-resort guard
+        update_job_record(
+            job_id,
+            status="failed",
+            detail="Processing failed",
+            error=f"Unexpected error: {exc}",
+            eta_seconds=None,
+        )
+
+
+def start_job(job_id: str, tool_key: str, saved_files: list[Path], form_data: dict[str, str]) -> None:
+    worker = threading.Thread(
+        target=run_job,
+        args=(job_id, tool_key, saved_files, form_data),
+        daemon=True,
+        name=f"pdf-forge-job-{job_id}",
+    )
+    worker.start()
 
 
 @app.before_request
@@ -188,34 +355,72 @@ def process(tool_key: str):
         return redirect(url_for("index"))
 
     job_id = uuid.uuid4().hex
-    job_upload_dir = UPLOAD_DIR / job_id
-    job_output_dir = OUTPUT_DIR / job_id
-    saved_files = save_uploads(uploaded_files, job_upload_dir)
+    upload_dir = UPLOAD_DIR / job_id
+    saved_files = save_uploads(uploaded_files, upload_dir)
 
     if not saved_files:
         flash("The uploaded files could not be saved.", "error")
         return redirect(url_for("index"))
 
+    create_job_record(job_id, tool_key, [path.name for path in saved_files])
+    start_job(job_id, tool_key, saved_files, request.form.to_dict(flat=True))
+    return redirect(url_for("job_detail", job_id=job_id))
+
+
+@app.get("/jobs/<job_id>")
+def job_detail(job_id: str):
     try:
-        result = run_tool(
-            tool_key=tool_key,
-            files=saved_files,
-            output_dir=job_output_dir,
-            form_data=request.form,
-        )
-        artifact = package_outputs(job_output_dir, result.files, tool_key)
-        return render_result_page(
-            job_id=job_id,
-            artifact=artifact,
-            tool=tool,
-            result_message=result.message,
-        )
-    except ProcessingError as exc:
-        flash(str(exc), "error")
-        return redirect(url_for("index"))
-    except Exception as exc:  # pragma: no cover - last-resort guard
-        flash(f"Processing failed: {exc}", "error")
-        return redirect(url_for("index"))
+        payload = serialize_job_record(load_job_record(job_id))
+    except FileNotFoundError:
+        abort(404)
+
+    tool = get_tool_definition(payload["tool_key"])
+    if tool is None:
+        abort(404)
+
+    if payload["status"] == "completed" and payload.get("artifact_name"):
+        return redirect(url_for("job_result", job_id=job_id))
+
+    return render_template(
+        "job.html",
+        active_page="home",
+        tool=tool,
+        job_id=job_id,
+        status_url=url_for("job_status", job_id=job_id),
+        result_url=url_for("job_result", job_id=job_id),
+        initial_status=payload,
+    )
+
+
+@app.get("/jobs/<job_id>/status")
+def job_status(job_id: str):
+    try:
+        payload = serialize_job_record(load_job_record(job_id))
+    except FileNotFoundError:
+        abort(404)
+    return payload
+
+
+@app.get("/jobs/<job_id>/result")
+def job_result(job_id: str):
+    try:
+        payload = load_job_record(job_id)
+    except FileNotFoundError:
+        abort(404)
+
+    if payload.get("status") != "completed" or not payload.get("artifact_name"):
+        return redirect(url_for("job_detail", job_id=job_id))
+
+    tool = get_tool_definition(payload["tool_key"])
+    if tool is None:
+        abort(404)
+
+    try:
+        artifact = resolve_job_artifact(job_id, payload["artifact_name"])
+    except FileNotFoundError:
+        abort(404)
+
+    return render_result_page(job_id, tool, payload, artifact)
 
 
 @app.get("/health")
@@ -242,7 +447,7 @@ def run_development_server() -> None:
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))
     debug = os.environ.get("FLASK_DEBUG", "1") == "1"
-    app.run(debug=debug, host=host, port=port)
+    app.run(debug=debug, host=host, port=port, threaded=True)
 
 
 if __name__ == "__main__":

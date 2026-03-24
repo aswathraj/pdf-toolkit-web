@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Processing | PDF Forge{% endblock %}
+
+{% block content %}
+  <section class="result-shell">
+    <article class="result-card job-card">
+      <p class="eyebrow">Processing Job</p>
+      <h1>{{ tool.title }} is running.</h1>
+      <p class="hero-text">
+        PDF Forge is processing your files in the background. This page updates automatically with progress,
+        estimated time, and the next step.
+      </p>
+
+      <div class="job-status-grid">
+        <div class="job-stat">
+          <span class="job-stat-label">Status</span>
+          <strong id="job-status-text">{{ initial_status.status|capitalize }}</strong>
+        </div>
+        <div class="job-stat">
+          <span class="job-stat-label">Estimated time left</span>
+          <strong id="job-eta-text">{{ initial_status.eta_text }}</strong>
+        </div>
+        <div class="job-stat">
+          <span class="job-stat-label">Elapsed</span>
+          <strong id="job-elapsed-text">{{ initial_status.elapsed_text }}</strong>
+        </div>
+      </div>
+
+      <div class="progress-shell" aria-live="polite">
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill" style="width: {{ initial_status.progress_percent }}%"></div>
+        </div>
+        <div class="progress-meta">
+          <strong id="progress-percent">{{ initial_status.progress_percent }}%</strong>
+          <span id="progress-detail">{{ initial_status.detail }}</span>
+        </div>
+      </div>
+
+      <div class="job-error-panel" id="job-error-panel" {% if initial_status.status != 'failed' %}hidden{% endif %}>
+        <h2>Processing failed</h2>
+        <p id="job-error-text">{{ initial_status.error }}</p>
+      </div>
+
+      <div class="result-actions">
+        <a class="ghost-link" href="{{ url_for('index') }}#tool-suite">Back to tools</a>
+      </div>
+
+      <p class="footnote">
+        Your files stay available for about {{ job_retention_hours }} hours after processing completes.
+      </p>
+    </article>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    const statusUrl = {{ status_url|tojson }};
+    const resultUrl = {{ result_url|tojson }};
+
+    function updateJobView(payload) {
+      document.getElementById('job-status-text').textContent = payload.status.charAt(0).toUpperCase() + payload.status.slice(1);
+      document.getElementById('job-eta-text').textContent = payload.eta_text;
+      document.getElementById('job-elapsed-text').textContent = payload.elapsed_text;
+      document.getElementById('progress-percent').textContent = `${payload.progress_percent}%`;
+      document.getElementById('progress-detail').textContent = payload.detail || 'Working...';
+      document.getElementById('progress-fill').style.width = `${payload.progress_percent}%`;
+
+      const errorPanel = document.getElementById('job-error-panel');
+      const errorText = document.getElementById('job-error-text');
+      if (payload.status === 'failed') {
+        errorPanel.hidden = false;
+        errorText.textContent = payload.error || 'Something went wrong during processing.';
+      } else {
+        errorPanel.hidden = true;
+      }
+    }
+
+    async function pollJob() {
+      try {
+        const response = await fetch(statusUrl, { cache: 'no-store' });
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = await response.json();
+        updateJobView(payload);
+
+        if (payload.status === 'completed') {
+          window.location.replace(resultUrl);
+          return;
+        }
+
+        if (payload.status === 'failed') {
+          return;
+        }
+      } catch (error) {
+        console.error('Job polling failed', error);
+      }
+
+      window.setTimeout(pollJob, 1000);
+    }
+
+    window.setTimeout(pollJob, 900);
+  </script>
+{% endblock %}
