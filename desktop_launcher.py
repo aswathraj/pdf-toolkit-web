@@ -89,6 +89,10 @@ class DesktopBridge:
         subprocess.Popen(["xdg-open", str(target)])
         return True
 
+    def open_external_url(self, raw_url: str) -> bool:
+        webbrowser.open(raw_url)
+        return True
+
 
 def open_fallback_browser(url: str) -> None:
     webbrowser.open(url)
@@ -107,7 +111,7 @@ def main() -> None:
         raise
 
     window = webview.create_window(
-        "PDF Forge by Aswath Raj",
+        "PDF Forge By Aswath Raj",
         url,
         min_size=(1120, 760),
         width=1380,

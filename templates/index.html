@@ -1,149 +1,419 @@
 {% extends "base.html" %}
 
-{% block title %}PDF Forge | Blue Document Toolkit{% endblock %}
+{% block title %}{{ brand_name }}{% endblock %}
 
 {% block content %}
-  <section class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">Public Web App + Desktop App</p>
-      <h1>Document tools people can use directly from the browser.</h1>
-      <p class="hero-text">
-        Convert, merge, split, clean, and OCR files in one place. PDF Forge now works as a cleaner
-        browser-based web app with a dedicated result flow, while still supporting the packaged desktop app
-        experience made by {{ creator_name }}.
+  <section class="home-hero" data-reveal>
+    <div class="hero-copy hero-copy-premium">
+      <p class="eyebrow">Browser-based PDF and document tools</p>
+      <h1>Fast document tools that feel simple.</h1>
+      <p class="hero-text hero-text-tight">
+        Convert, merge, split, OCR, and clean files in one polished workflow.
       </p>
       <div class="hero-actions">
-        <a class="button-link" href="#tool-suite">Start with a tool</a>
-        <a class="ghost-link" href="{{ url_for('downloads') }}">Get desktop apps</a>
-        <a class="ghost-link" href="{{ url_for('about') }}">About PDF Forge</a>
-      </div>
-      <div class="hero-pills">
-        <span>No app-side file limit</span>
-        <span>Browser-ready deployment</span>
-        <span>Searchable OCR PDFs</span>
-        <span>Made by {{ creator_name }}</span>
+        <a class="button-link" href="#tool-suite">Open tools</a>
+        {% if not desktop_mode %}
+          <a class="ghost-link" href="{{ url_for('downloads') }}">Get desktop apps</a>
+        {% endif %}
       </div>
     </div>
 
-    <aside class="hero-note">
-      <h2>What public users can do</h2>
-      <ul>
-        <li>Convert JPG, Word, Excel, and PDF files</li>
-        <li>Resize images by pixels, set DPI, and convert formats</li>
-        <li>Merge and split PDFs in the browser</li>
-        <li>Remove watermark text and clean annotations</li>
-        <li>Run OCR with Tesseract-backed processing</li>
-      </ul>
-      <p class="footnote">
-        “No limit” here means the app itself does not impose a Flask upload cap. Actual capacity still
-        depends on the hosting environment, available storage, RAM, and any reverse proxy settings.
-      </p>
+    <aside class="hero-visual" aria-hidden="true" data-reveal>
+      <div class="mockup-shell">
+        <div class="mockup-toolbar">
+          <span class="mockup-brand">{{ brand_name }}</span>
+          <span class="mockup-status">Live workflow</span>
+        </div>
+        <div class="mockup-body">
+          <article class="mockup-card">
+            <div class="tool-topline">
+              <span class="tool-chip">Convert</span>
+              <span class="tool-meta">3 files ready</span>
+            </div>
+            <h3>JPG to PDF</h3>
+            <p>Upload images, review the queue, and convert them in one calm flow.</p>
+            <div class="mini-upload-zone">
+              <span>Drag files here</span>
+              <strong>cover.jpg, pages.png, scan.webp</strong>
+            </div>
+          </article>
+          <div class="mockup-stats">
+            <div class="mockup-stat">
+              <span>Tools</span>
+              <strong>{{ tool_count }}</strong>
+            </div>
+            <div class="mockup-stat">
+              <span>OCR</span>
+              <strong>Searchable</strong>
+            </div>
+            <div class="mockup-stat">
+              <span>Cleanup</span>
+              <strong>Automatic</strong>
+            </div>
+          </div>
+          <article class="mockup-card mockup-result">
+            <div class="tool-topline">
+              <span class="tool-chip">Ready</span>
+              <span class="tool-meta">Result available</span>
+            </div>
+            <h3>Download result</h3>
+            <div class="preview-progress">
+              <div class="preview-progress-bar" style="width: 100%"></div>
+            </div>
+            <p>images-to-pdf.pdf is prepared and ready to download.</p>
+          </article>
+        </div>
+      </div>
     </aside>
   </section>
 
-  <section class="feature-grid quick-facts">
-    <article class="feature-card">
-      <h3>{{ tools|length }} built-in tools</h3>
-      <p>Image, Office, PDF, repair, OCR, and image-resize flows all live in the same interface.</p>
-    </article>
-    <article class="feature-card">
-      <h3>Temporary file retention</h3>
-      <p>Processed jobs are kept just long enough for downloads, then cleaned up automatically.</p>
-    </article>
-    <article class="feature-card">
-      <h3>Public hosting ready</h3>
-      <p>The app now includes production-ready web serving and Docker deployment support.</p>
-    </article>
-    <article class="feature-card">
-      <h3>Desktop installers</h3>
-      <p>Windows and macOS downloads are available from the new download page and GitHub release.</p>
-    </article>
+  <section class="trust-strip" aria-label="Trust signals" data-reveal>
+    <div class="trust-badge-row">
+      <span class="trust-badge">Browser-based</span>
+      <span class="trust-badge">OCR support</span>
+      <span class="trust-badge">Auto cleanup</span>
+      <span class="trust-badge">Windows &amp; macOS</span>
+    </div>
   </section>
 
-  <section class="section-heading" id="tool-suite">
-    <p class="eyebrow">Tool Suite</p>
-    <h2>Choose a workflow</h2>
+  <section class="section-panel preview-section" data-reveal>
+    <div class="section-heading section-heading-compact">
+      <p class="eyebrow">Product preview</p>
+      <h2>Premium upload and result states without the clutter.</h2>
+      <p class="section-copy">
+        Move from upload to processing to download in a focused browser workflow with better status,
+        cleaner actions, and less visual noise.
+      </p>
+    </div>
+
+    <div class="preview-window">
+      <div class="preview-sidebar">
+        <p class="preview-sidebar-label">Toolkit</p>
+        {% for group in tool_groups %}
+          <div class="preview-nav-item">
+            <strong>{{ group.title }}</strong>
+            <span>{{ group.count }} tools</span>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="preview-main">
+        <article class="preview-panel-card">
+          <div class="tool-topline">
+            <span class="tool-chip">Organize</span>
+            <span class="tool-meta">Selected tool</span>
+          </div>
+          <h3>Merge PDF</h3>
+          <p>Combine multiple PDFs in the order you upload them.</p>
+          <div class="preview-upload-card">
+            <span>Upload queue</span>
+            <strong>proposal.pdf, appendix.pdf, signed.pdf</strong>
+          </div>
+          <button type="button" class="ghost-button" disabled>Merge PDFs</button>
+        </article>
+
+        <article class="preview-panel-card">
+          <div class="tool-topline">
+            <span class="tool-chip">Processing</span>
+            <span class="tool-meta">Live progress</span>
+          </div>
+          <h3>Job status</h3>
+          <div class="preview-progress">
+            <div class="preview-progress-bar" style="width: 82%"></div>
+          </div>
+          <div class="preview-metadata">
+            <span>82% complete</span>
+            <span>about 18s left</span>
+          </div>
+          <p>Packaging your download and preparing the result page.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-heading section-stack" id="tool-suite" data-reveal>
+    <p class="eyebrow">Tool suite</p>
+    <h2>Everything you need in one toolkit</h2>
     <p class="section-copy">
-      Upload your files, run the selected process, and download the result from the browser when it is ready.
+      Convert files, organize PDFs, extract content, and run OCR without leaving the browser.
     </p>
   </section>
 
-  <section class="tool-grid">
-    {% for tool in tools %}
-      <article class="tool-card">
-        <div class="tool-head">
-          <span class="tool-badge">{{ tool.badge }}</span>
-          <h2>{{ tool.title }}</h2>
-        </div>
-        <p class="tool-summary">{{ tool.summary }}</p>
-        <form method="post" action="{{ url_for('process', tool_key=tool.key) }}" enctype="multipart/form-data" class="tool-form">
-          <label class="drop-field">
-            <span>Select {{ 'files' if tool.multiple else 'a file' }}</span>
-            <input type="file" name="files" accept="{{ tool.accept }}" {% if tool.multiple %}multiple{% endif %} required>
-          </label>
-
-          {% if tool.key == 'split-pdf' %}
-            <div class="field-group">
-              <label>
-                <span>Split mode</span>
-                <select name="split_mode">
-                  <option value="all">Every page separately</option>
-                  <option value="ranges">Custom ranges</option>
-                </select>
-              </label>
-              <label>
-                <span>Ranges</span>
-                <input type="text" name="ranges" placeholder="1-3,5,8-10">
-              </label>
-            </div>
-          {% endif %}
-
-          {% if tool.key == 'remove-watermark' %}
-            <label>
-              <span>Watermark text to remove (optional)</span>
-              <input type="text" name="watermark_text" placeholder="CONFIDENTIAL">
-            </label>
-          {% endif %}
-
-          {% if tool.key == 'resize-image' %}
-            <div class="field-group">
-              <label>
-                <span>Width (px)</span>
-                <input type="number" name="width_px" min="1" placeholder="1920">
-              </label>
-              <label>
-                <span>Height (px)</span>
-                <input type="number" name="height_px" min="1" placeholder="1080">
-              </label>
-            </div>
-
-            <div class="field-group">
-              <label>
-                <span>DPI (optional)</span>
-                <input type="number" name="dpi" min="1" placeholder="300">
-              </label>
-              <label>
-                <span>Output format</span>
-                <select name="output_format">
-                  <option value="original">Keep original format</option>
-                  <option value="jpeg">JPEG</option>
-                  <option value="png">PNG</option>
-                  <option value="webp">WEBP</option>
-                  <option value="tiff">TIFF</option>
-                  <option value="bmp">BMP</option>
-                </select>
-              </label>
-            </div>
-
-            <label class="checkbox-row">
-              <input type="checkbox" name="keep_aspect" checked>
-              <span>Keep aspect ratio when resizing</span>
-            </label>
-          {% endif %}
-
-          <button type="submit">{{ tool.button }}</button>
-        </form>
-      </article>
+  <section class="category-overview-grid" data-reveal>
+    {% for group in tool_groups %}
+      <a class="category-link-card" href="#group-{{ group.slug }}">
+        <span class="category-link-label">{{ group.title }}</span>
+        <strong>{{ group.count }} tools</strong>
+        <p>{{ group.description }}</p>
+      </a>
     {% endfor %}
   </section>
+
+  {% for group in tool_groups %}
+    <section class="tool-group" id="group-{{ group.slug }}" data-reveal>
+      <div class="tool-group-head">
+        <div>
+          <p class="eyebrow">{{ group.title }}</p>
+          <h2>{{ group.title }}</h2>
+          <p class="section-copy">{{ group.description }}</p>
+        </div>
+        <span class="group-count">{{ group.count }} tools</span>
+      </div>
+
+      <div class="tool-grid grouped-tool-grid">
+        {% for tool in group.tools %}
+          <article class="tool-card" data-reveal>
+            <div class="tool-topline">
+              <span class="tool-chip">{{ tool.badge }}</span>
+              <span class="tool-meta">{{ "Multiple files" if tool.multiple else "Single file" }}</span>
+            </div>
+
+            <div class="tool-content">
+              <h3>{{ tool.title }}</h3>
+              <p class="tool-summary">{{ tool.summary }}</p>
+            </div>
+
+            <form method="post" action="{{ url_for('process', tool_key=tool.key) }}" enctype="multipart/form-data" class="tool-form">
+              <label class="drop-field" data-upload-zone tabindex="0" role="button" aria-label="{{ tool.title }} upload">
+                <input class="file-input" type="file" name="files" accept="{{ tool.accept }}" {% if tool.multiple %}multiple{% endif %} required>
+                <span class="upload-label">Drag and drop or click to upload</span>
+                <span class="upload-helper">Supports {{ tool.formats_help }}</span>
+                <span class="upload-feedback" data-upload-feedback>No files selected yet</span>
+                <div class="upload-chip-row" data-upload-chips></div>
+              </label>
+
+              {% if tool.key == 'split-pdf' %}
+                <div class="field-group">
+                  <label>
+                    <span>Split mode</span>
+                    <select name="split_mode">
+                      <option value="all">Every page separately</option>
+                      <option value="ranges">Custom ranges</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Ranges</span>
+                    <input type="text" name="ranges" placeholder="1-3,5,8-10">
+                  </label>
+                </div>
+              {% endif %}
+
+              {% if tool.key == 'remove-watermark' %}
+                <label>
+                  <span>Watermark text</span>
+                  <input type="text" name="watermark_text" placeholder="CONFIDENTIAL">
+                </label>
+              {% endif %}
+
+              {% if tool.key == 'resize-image' %}
+                <div class="field-group">
+                  <label>
+                    <span>Width (px)</span>
+                    <input type="number" name="width_px" min="1" placeholder="1920">
+                  </label>
+                  <label>
+                    <span>Height (px)</span>
+                    <input type="number" name="height_px" min="1" placeholder="1080">
+                  </label>
+                </div>
+
+                <div class="field-group">
+                  <label>
+                    <span>DPI</span>
+                    <input type="number" name="dpi" min="1" placeholder="300">
+                  </label>
+                  <label>
+                    <span>Output format</span>
+                    <select name="output_format">
+                      <option value="original">Keep original format</option>
+                      <option value="jpeg">JPEG</option>
+                      <option value="png">PNG</option>
+                      <option value="webp">WEBP</option>
+                      <option value="tiff">TIFF</option>
+                      <option value="bmp">BMP</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label class="checkbox-row">
+                  <input type="checkbox" name="keep_aspect" checked>
+                  <span>Keep aspect ratio</span>
+                </label>
+              {% endif %}
+
+              <button type="submit">{{ tool.button }}</button>
+            </form>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+
+  <section class="section-panel benefits-panel" data-reveal>
+    <div class="section-heading section-heading-compact">
+      <p class="eyebrow">Benefits</p>
+      <h2>Designed for smooth file workflows</h2>
+    </div>
+
+    <div class="feature-grid benefit-grid">
+      <article class="feature-card">
+        <h3>Fast conversions</h3>
+        <p>Move from upload to output quickly with focused flows and cleaner actions.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Searchable OCR</h3>
+        <p>Turn scans into searchable files without leaving the same workspace.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Browser-first workflow</h3>
+        <p>Use the full tool suite from the browser with clearer status and result pages.</p>
+      </article>
+      <article class="feature-card">
+        <h3>Auto cleanup</h3>
+        <p>Files are cleaned up automatically after processing.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section-panel file-handling-panel" data-reveal>
+    <div>
+      <p class="eyebrow">File handling</p>
+      <h2>Files handled with less friction</h2>
+      <p class="section-copy">Files are cleaned up automatically after processing.</p>
+    </div>
+    <div class="inline-note-grid">
+      <div class="inline-note-card">
+        <strong>Clear progress</strong>
+        <span>Track status, percentage, and estimated time from the same interface.</span>
+      </div>
+      <div class="inline-note-card">
+        <strong>Focused results</strong>
+        <span>Processed outputs are presented in a dedicated result view with direct actions.</span>
+      </div>
+    </div>
+  </section>
+
+  {% if not desktop_mode %}
+    <section class="section-panel desktop-panel" data-reveal>
+      <div>
+        <p class="eyebrow">Desktop apps</p>
+        <h2>Prefer offline workflows?</h2>
+        <p class="section-copy">
+          Download PDF Forge for Windows or macOS and use the same core tools in a packaged desktop app.
+        </p>
+      </div>
+      <div class="desktop-actions">
+        <a class="button-link" href="{{ url_for('downloads') }}">Get desktop apps</a>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    function applyFileSelection(zone, files) {
+      const input = zone.querySelector('.file-input');
+      if (!input || !window.DataTransfer) {
+        return;
+      }
+
+      const transfer = new DataTransfer();
+      Array.from(files)
+        .slice(0, input.multiple ? files.length : 1)
+        .forEach((file) => transfer.items.add(file));
+
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function renderUploadState(zone) {
+      const input = zone.querySelector('.file-input');
+      const feedback = zone.querySelector('[data-upload-feedback]');
+      const chipRow = zone.querySelector('[data-upload-chips]');
+      const files = Array.from(input.files || []);
+
+      zone.classList.toggle('has-files', files.length > 0);
+      feedback.textContent = files.length ? `${files.length} file${files.length === 1 ? '' : 's'} selected` : 'No files selected yet';
+      chipRow.innerHTML = '';
+
+      files.slice(0, 3).forEach((file) => {
+        const chip = document.createElement('span');
+        chip.className = 'upload-chip';
+        chip.textContent = file.name;
+        chipRow.appendChild(chip);
+      });
+
+      if (files.length > 3) {
+        const extra = document.createElement('span');
+        extra.className = 'upload-chip upload-chip-muted';
+        extra.textContent = `+${files.length - 3} more`;
+        chipRow.appendChild(extra);
+      }
+    }
+
+    function initUploadZones() {
+      document.querySelectorAll('[data-upload-zone]').forEach((zone) => {
+        const input = zone.querySelector('.file-input');
+        if (!input) {
+          return;
+        }
+
+        renderUploadState(zone);
+
+        input.addEventListener('change', () => renderUploadState(zone));
+
+        zone.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            input.click();
+          }
+        });
+
+        ['dragenter', 'dragover'].forEach((eventName) => {
+          zone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            zone.classList.add('is-dragging');
+          });
+        });
+
+        ['dragleave', 'dragend', 'drop'].forEach((eventName) => {
+          zone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            if (eventName !== 'drop') {
+              zone.classList.remove('is-dragging');
+            }
+          });
+        });
+
+        zone.addEventListener('drop', (event) => {
+          zone.classList.remove('is-dragging');
+          if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
+            applyFileSelection(zone, event.dataTransfer.files);
+          }
+        });
+      });
+    }
+
+    function initRevealAnimations() {
+      const items = document.querySelectorAll('[data-reveal]');
+      if (!items.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        items.forEach((item) => item.classList.add('is-visible'));
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+
+      items.forEach((item) => observer.observe(item));
+    }
+
+    initUploadZones();
+    initRevealAnimations();
+  </script>
 {% endblock %}

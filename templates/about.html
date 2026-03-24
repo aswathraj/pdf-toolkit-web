@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}About PDF Forge{% endblock %}
+{% block title %}About | {{ brand_name }}{% endblock %}
 
 {% block content %}
   <section class="content-hero content-hero-wide">
@@ -8,30 +8,32 @@
       <p class="eyebrow">About The Project</p>
       <h1>PDF Forge was built to make document work simpler on the web and on desktop.</h1>
       <p class="hero-text">
-        PDF Forge brings together conversion, PDF cleanup, merge and split workflows, and OCR in one
-        place. It is designed to work as a public browser-based web app while still packaging cleanly
-        as a desktop application made by {{ creator_name }}.
+        {{ brand_name }} brings together conversion, PDF cleanup, merge and split workflows, and OCR
+        in one polished toolkit for web and desktop.
       </p>
       <div class="hero-actions">
-        <a class="button-link" href="{{ url_for('downloads') }}">Download apps</a>
+        {% if desktop_mode %}
+          <button type="button" class="button-link" onclick="openWebsite()">Visit website</button>
+        {% else %}
+          <a class="button-link" href="{{ url_for('downloads') }}">Get desktop apps</a>
+        {% endif %}
         <a class="ghost-link" href="{{ github_repo_url }}">View GitHub</a>
       </div>
       <div class="hero-pills">
         <span>{{ tool_count }} built-in tools</span>
-        <span>Browser-ready deployment</span>
-        <span>OCR-enabled workflows</span>
+        <span>Browser + desktop workflows</span>
+        <span>Searchable OCR</span>
       </div>
     </div>
 
     <aside class="hero-note">
       <h2>Made by {{ creator_name }}</h2>
       <p class="tool-summary">
-        The app is built with Python, Flask, HTML, CSS, and a document-processing stack that covers
-        images, PDFs, Word files, Excel files, and OCR for scanned documents.
+        The app is built around clean document workflows for images, PDFs, Word files, Excel files,
+        and OCR for scanned documents.
       </p>
       <p class="footnote">
-        When deployed publicly, files are processed on the server and old jobs are cleaned up
-        automatically after about {{ job_retention_hours }} hours.
+        Files are cleaned up automatically after processing, and desktop builds mirror the same core tools.
       </p>
     </aside>
   </section>
@@ -85,4 +87,21 @@
       </article>
     </div>
   </section>
+{% endblock %}
+
+{% block scripts %}
+  {% if desktop_mode %}
+    <script>
+      const publicSiteUrl = {{ public_site_url|tojson }};
+
+      async function openWebsite() {
+        const desktopApi = window.pywebview && window.pywebview.api;
+        if (desktopApi && typeof desktopApi.open_external_url === 'function') {
+          await desktopApi.open_external_url(publicSiteUrl);
+          return;
+        }
+        window.open(publicSiteUrl, '_blank', 'noopener,noreferrer');
+      }
+    </script>
+  {% endif %}
 {% endblock %}

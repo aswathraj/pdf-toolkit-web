@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}PDF Forge by {{ creator_name }}{% endblock %}</title>
+  <title>{% block title %}{{ brand_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -11,17 +11,19 @@
     <div class="page-shell shell-tight">
       <div class="header-panel">
         <div class="brand-stack">
-          <a class="brand-mark" href="{{ url_for('index') }}">PDF Forge</a>
-          <p class="brand-tagline">Made by {{ creator_name }}</p>
+          <a class="brand-mark" href="{{ url_for('index') }}">{{ brand_name }}</a>
+          <p class="brand-tagline">Premium browser and desktop document workflows</p>
         </div>
 
         <nav class="site-nav" aria-label="Primary">
-          <a class="nav-link {% if active_page == 'home' %}is-active{% endif %}" href="{{ url_for('index') }}">Home</a>
-          <a class="nav-link {% if active_page == 'downloads' %}is-active{% endif %}" href="{{ url_for('downloads') }}">Downloads</a>
+          <a class="nav-link {% if active_page == 'home' %}is-active{% endif %}" href="{% if active_page == 'home' %}#tool-suite{% else %}{{ url_for('index') }}#tool-suite{% endif %}">Tools</a>
+          {% if not desktop_mode %}
+            <a class="nav-link {% if active_page == 'downloads' %}is-active{% endif %}" href="{{ url_for('downloads') }}">Downloads</a>
+          {% endif %}
           <a class="nav-link {% if active_page == 'about' %}is-active{% endif %}" href="{{ url_for('about') }}">About</a>
         </nav>
 
-        <a class="header-cta" href="{% if active_page == 'home' %}#tool-suite{% else %}{{ url_for('index') }}#tool-suite{% endif %}">Open Tools</a>
+        <a class="header-cta" href="{% if active_page == 'home' %}#tool-suite{% else %}{{ url_for('index') }}#tool-suite{% endif %}">Open tools</a>
       </div>
     </div>
   </header>
@@ -42,18 +44,23 @@
 
   <footer class="site-footer">
     <div class="page-shell shell-tight footer-grid">
-      <div>
-        <p class="footer-mark">PDF Forge</p>
+      <div class="footer-brand">
+        <p class="footer-mark">{{ brand_name }}</p>
         <p class="footer-copy">
-          Browser-ready document conversion, PDF repair, and OCR for web, Windows, and macOS. Made by {{ creator_name }}.
+          Browser-ready document conversion, PDF repair, and OCR for web, Windows, and macOS. Made by Aswath Raj.
         </p>
       </div>
 
       <div class="footer-links">
-        <a href="{{ url_for('index') }}">Tool Suite</a>
-        <a href="{{ url_for('downloads') }}">Downloads</a>
-        <a href="{{ url_for('about') }}">About</a>
-        <a href="{{ latest_release_url }}">GitHub Release</a>
+        <div class="footer-column">
+          <p class="footer-label">Product</p>
+          <a href="{{ url_for('index') }}#tool-suite">Tools</a>
+          {% if not desktop_mode %}
+            <a href="{{ url_for('downloads') }}">Downloads</a>
+          {% endif %}
+          <a href="{{ url_for('about') }}">About</a>
+          <a href="{{ github_repo_url }}">GitHub</a>
+        </div>
       </div>
     </div>
   </footer>

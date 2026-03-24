@@ -16,11 +16,46 @@ from werkzeug.utils import secure_filename
 from services.document_tools import ProcessingError, TOOL_DEFINITIONS, run_tool
 
 
+BRAND_NAME = "PDF Forge By Aswath Raj"
 GITHUB_REPO_URL = "https://github.com/aswathraj/pdf-toolkit-web"
 LATEST_RELEASE_URL = f"{GITHUB_REPO_URL}/releases/latest"
 WINDOWS_INSTALLER_URL = f"{LATEST_RELEASE_URL}/download/PDFForgeSetup.exe"
 MAC_INSTALLER_URL = f"{LATEST_RELEASE_URL}/download/PDFForge-macOS.dmg"
 WINDOWS_PORTABLE_URL = f"{LATEST_RELEASE_URL}/download/PDFForge.exe"
+PUBLIC_SITE_URL = "https://pdf-forge-web.onrender.com/"
+
+TOOL_GROUPS = [
+    {
+        "slug": "convert",
+        "title": "Convert",
+        "description": "Create PDFs, resized images, and polished outputs from common document formats.",
+        "keys": ["jpg-to-pdf", "word-to-pdf", "excel-to-pdf", "resize-image"],
+    },
+    {
+        "slug": "extract",
+        "title": "Extract",
+        "description": "Turn PDFs back into images, DOCX files, and spreadsheet-ready exports.",
+        "keys": ["pdf-to-jpg", "pdf-to-word", "pdf-to-excel"],
+    },
+    {
+        "slug": "organize",
+        "title": "Organize",
+        "description": "Merge files together or split pages apart with cleaner control.",
+        "keys": ["merge-pdf", "split-pdf"],
+    },
+    {
+        "slug": "repair",
+        "title": "Repair",
+        "description": "Clean visual clutter from PDFs before sharing or archiving them.",
+        "keys": ["remove-watermark"],
+    },
+    {
+        "slug": "ocr",
+        "title": "OCR",
+        "description": "Make scanned files searchable and easier to work with.",
+        "keys": ["ocr-pdf"],
+    },
+]
 
 
 def is_frozen() -> bool:
@@ -207,6 +242,15 @@ def get_tool_definition(tool_key: str):
     return next((tool for tool in TOOL_DEFINITIONS if tool["key"] == tool_key), None)
 
 
+def build_tool_groups() -> list[dict]:
+    tool_lookup = {tool["key"]: tool for tool in TOOL_DEFINITIONS}
+    groups: list[dict] = []
+    for group in TOOL_GROUPS:
+        tools = [tool_lookup[key] for key in group["keys"] if key in tool_lookup]
+        groups.append({**group, "count": len(tools), "tools": tools})
+    return groups
+
+
 def serialize_job_record(payload: dict) -> dict:
     progress = max(0.0, min(float(payload.get("progress", 0.0)), 1.0))
     started_at = payload.get("started_at")
@@ -327,7 +371,12 @@ def prune_storage() -> None:
 
 @app.get("/")
 def index():
-    return render_template("index.html", tools=TOOL_DEFINITIONS, active_page="home")
+    return render_template(
+        "index.html",
+        active_page="home",
+        tool_count=len(TOOL_DEFINITIONS),
+        tool_groups=build_tool_groups(),
+    )
 
 
 @app.get("/about")
@@ -343,6 +392,8 @@ def about():
 
 @app.get("/downloads")
 def downloads():
+    if is_desktop_mode():
+        return redirect(url_for("about"))
     return render_template(
         "downloads.html",
         active_page="downloads",
@@ -374,12 +425,14 @@ def downloads():
 @app.context_processor
 def inject_app_mode():
     return {
+        "brand_name": BRAND_NAME,
         "creator_name": "Aswath Raj",
         "desktop_mode": is_desktop_mode(),
         "github_repo_url": GITHUB_REPO_URL,
         "job_retention_hours": JOB_TTL_HOURS,
         "latest_release_url": LATEST_RELEASE_URL,
         "mac_installer_url": MAC_INSTALLER_URL,
+        "public_site_url": PUBLIC_SITE_URL,
         "windows_installer_url": WINDOWS_INSTALLER_URL,
     }
 
