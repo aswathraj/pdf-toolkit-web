@@ -16,6 +16,13 @@ from werkzeug.utils import secure_filename
 from services.document_tools import ProcessingError, TOOL_DEFINITIONS, run_tool
 
 
+GITHUB_REPO_URL = "https://github.com/aswathraj/pdf-toolkit-web"
+LATEST_RELEASE_URL = f"{GITHUB_REPO_URL}/releases/latest"
+WINDOWS_INSTALLER_URL = f"{LATEST_RELEASE_URL}/download/PDFForgeSetup.exe"
+MAC_INSTALLER_URL = f"{LATEST_RELEASE_URL}/download/PDFForge-macOS.dmg"
+WINDOWS_PORTABLE_URL = f"{LATEST_RELEASE_URL}/download/PDFForge.exe"
+
+
 def is_frozen() -> bool:
     return bool(getattr(sys, "frozen", False))
 
@@ -334,11 +341,46 @@ def about():
     )
 
 
+@app.get("/downloads")
+def downloads():
+    return render_template(
+        "downloads.html",
+        active_page="downloads",
+        download_options=[
+            {
+                "platform": "Windows",
+                "headline": "Windows installer",
+                "summary": "Install PDF Forge with bundled OCR support and desktop shortcuts.",
+                "format": "PDFForgeSetup.exe",
+                "primary_url": WINDOWS_INSTALLER_URL,
+                "secondary_url": WINDOWS_PORTABLE_URL,
+                "primary_label": "Download installer",
+                "secondary_label": "Portable EXE",
+            },
+            {
+                "platform": "macOS",
+                "headline": "macOS app installer",
+                "summary": "Download the DMG for the desktop app with the same tool suite and blue UI.",
+                "format": "PDFForge-macOS.dmg",
+                "primary_url": MAC_INSTALLER_URL,
+                "secondary_url": LATEST_RELEASE_URL,
+                "primary_label": "Download DMG",
+                "secondary_label": "View release",
+            },
+        ],
+    )
+
+
 @app.context_processor
 def inject_app_mode():
     return {
+        "creator_name": "Aswath Raj",
         "desktop_mode": is_desktop_mode(),
+        "github_repo_url": GITHUB_REPO_URL,
         "job_retention_hours": JOB_TTL_HOURS,
+        "latest_release_url": LATEST_RELEASE_URL,
+        "mac_installer_url": MAC_INSTALLER_URL,
+        "windows_installer_url": WINDOWS_INSTALLER_URL,
     }
 
 

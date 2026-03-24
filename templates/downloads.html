@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Downloads | PDF Forge{% endblock %}
+
+{% block content %}
+  <section class="content-hero content-hero-wide">
+    <div class="hero-copy">
+      <p class="eyebrow">Desktop Downloads</p>
+      <h1>Install PDF Forge on Windows or macOS.</h1>
+      <p class="hero-text">
+        Download the packaged desktop builds from GitHub Releases. Each installer is based on the same
+        blue PDF Forge experience used on the public web app and desktop runtime, created by {{ creator_name }}.
+      </p>
+      <div class="hero-actions">
+        <a class="button-link" href="{{ latest_release_url }}">Open latest release</a>
+        <a class="ghost-link" href="{{ url_for('index') }}#tool-suite">Use the web app</a>
+      </div>
+      <div class="hero-pills">
+        <span>Windows installer</span>
+        <span>macOS DMG</span>
+        <span>Tesseract OCR support</span>
+      </div>
+    </div>
+
+    <aside class="hero-note">
+      <h2>Release shortcuts</h2>
+      <ul>
+        <li><a href="{{ windows_installer_url }}">Windows installer download</a></li>
+        <li><a href="{{ mac_installer_url }}">macOS DMG download</a></li>
+        <li><a href="{{ github_repo_url }}">GitHub repository</a></li>
+      </ul>
+      <p class="footnote">
+        GitHub serves the installers directly from the latest release, so these links stay usable as
+        new builds are published.
+      </p>
+    </aside>
+  </section>
+
+  <section class="download-grid">
+    {% for option in download_options %}
+      <article class="download-card">
+        <p class="eyebrow">{{ option.platform }}</p>
+        <h2>{{ option.headline }}</h2>
+        <p class="tool-summary">{{ option.summary }}</p>
+        <div class="download-meta">
+          <p><strong>Package:</strong> {{ option.format }}</p>
+          <p><strong>Creator:</strong> {{ creator_name }}</p>
+          <p><strong>Source:</strong> GitHub Releases</p>
+        </div>
+        <div class="hero-actions">
+          <a class="button-link" href="{{ option.primary_url }}">{{ option.primary_label }}</a>
+          <a class="ghost-link" href="{{ option.secondary_url }}">{{ option.secondary_label }}</a>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% endblock %}

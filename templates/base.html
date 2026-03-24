@@ -3,21 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}PDF Forge{% endblock %}</title>
+  <title>{% block title %}PDF Forge by {{ creator_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <header class="site-header">
     <div class="page-shell shell-tight">
       <div class="header-panel">
-        <a class="brand-mark" href="{{ url_for('index') }}">PDF Forge</a>
+        <div class="brand-stack">
+          <a class="brand-mark" href="{{ url_for('index') }}">PDF Forge</a>
+          <p class="brand-tagline">Made by {{ creator_name }}</p>
+        </div>
 
         <nav class="site-nav" aria-label="Primary">
           <a class="nav-link {% if active_page == 'home' %}is-active{% endif %}" href="{{ url_for('index') }}">Home</a>
+          <a class="nav-link {% if active_page == 'downloads' %}is-active{% endif %}" href="{{ url_for('downloads') }}">Downloads</a>
           <a class="nav-link {% if active_page == 'about' %}is-active{% endif %}" href="{{ url_for('about') }}">About</a>
         </nav>
 
-        <a class="header-cta" href="{{ url_for('index') }}#tool-suite">Open Tools</a>
+        <a class="header-cta" href="{% if active_page == 'home' %}#tool-suite{% else %}{{ url_for('index') }}#tool-suite{% endif %}">Open Tools</a>
       </div>
     </div>
   </header>
@@ -41,14 +45,15 @@
       <div>
         <p class="footer-mark">PDF Forge</p>
         <p class="footer-copy">
-          Browser-ready document conversion, PDF repair, and OCR. Made by Aswath Raj.
+          Browser-ready document conversion, PDF repair, and OCR for web, Windows, and macOS. Made by {{ creator_name }}.
         </p>
       </div>
 
       <div class="footer-links">
         <a href="{{ url_for('index') }}">Tool Suite</a>
+        <a href="{{ url_for('downloads') }}">Downloads</a>
         <a href="{{ url_for('about') }}">About</a>
-        <a href="{{ url_for('health') }}">Health</a>
+        <a href="{{ latest_release_url }}">GitHub Release</a>
       </div>
     </div>
   </footer>

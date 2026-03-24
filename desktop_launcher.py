@@ -107,7 +107,7 @@ def main() -> None:
         raise
 
     window = webview.create_window(
-        "PDF Forge",
+        "PDF Forge by Aswath Raj",
         url,
         min_size=(1120, 760),
         width=1380,

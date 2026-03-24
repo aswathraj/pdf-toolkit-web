@@ -10,8 +10,12 @@
       <p class="hero-text">
         PDF Forge brings together conversion, PDF cleanup, merge and split workflows, and OCR in one
         place. It is designed to work as a public browser-based web app while still packaging cleanly
-        as a desktop application.
+        as a desktop application made by {{ creator_name }}.
       </p>
+      <div class="hero-actions">
+        <a class="button-link" href="{{ url_for('downloads') }}">Download apps</a>
+        <a class="ghost-link" href="{{ github_repo_url }}">View GitHub</a>
+      </div>
       <div class="hero-pills">
         <span>{{ tool_count }} built-in tools</span>
         <span>Browser-ready deployment</span>
@@ -20,7 +24,7 @@
     </div>
 
     <aside class="hero-note">
-      <h2>Made by Aswath Raj</h2>
+      <h2>Made by {{ creator_name }}</h2>
       <p class="tool-summary">
         The app is built with Python, Flask, HTML, CSS, and a document-processing stack that covers
         images, PDFs, Word files, Excel files, and OCR for scanned documents.

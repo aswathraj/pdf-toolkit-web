@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}PDF Forge{% endblock %}
+{% block title %}PDF Forge | Blue Document Toolkit{% endblock %}
 
 {% block content %}
   <section class="hero">
@@ -9,16 +9,19 @@
       <h1>Document tools people can use directly from the browser.</h1>
       <p class="hero-text">
         Convert, merge, split, clean, and OCR files in one place. PDF Forge now works as a cleaner
-        browser-based web app with a dedicated result flow, while still supporting the packaged desktop app.
+        browser-based web app with a dedicated result flow, while still supporting the packaged desktop app
+        experience made by {{ creator_name }}.
       </p>
       <div class="hero-actions">
         <a class="button-link" href="#tool-suite">Start with a tool</a>
+        <a class="ghost-link" href="{{ url_for('downloads') }}">Get desktop apps</a>
         <a class="ghost-link" href="{{ url_for('about') }}">About PDF Forge</a>
       </div>
       <div class="hero-pills">
         <span>No app-side file limit</span>
         <span>Browser-ready deployment</span>
         <span>Searchable OCR PDFs</span>
+        <span>Made by {{ creator_name }}</span>
       </div>
     </div>
 
@@ -50,6 +53,10 @@
     <article class="feature-card">
       <h3>Public hosting ready</h3>
       <p>The app now includes production-ready web serving and Docker deployment support.</p>
+    </article>
+    <article class="feature-card">
+      <h3>Desktop installers</h3>
+      <p>Windows and macOS downloads are available from the new download page and GitHub release.</p>
     </article>
   </section>
 
